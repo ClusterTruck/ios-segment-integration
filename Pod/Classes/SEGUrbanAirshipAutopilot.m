@@ -1,27 +1,4 @@
-/*
- Copyright 2009-2016 Urban Airship Inc. All rights reserved.
-
- Redistribution and use in source and binary forms, with or without
- modification, are permitted provided that the following conditions are met:
-
- 1. Redistributions of source code must retain the above copyright notice, this
- list of conditions and the following disclaimer.
-
- 2. Redistributions in binary form must reproduce the above copyright notice,
- this list of conditions and the following disclaimer in the documentation
- and/or other materials provided with the distribution.
-
- THIS SOFTWARE IS PROVIDED BY THE URBAN AIRSHIP INC ``AS IS'' AND ANY EXPRESS OR
- IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
- MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
- EVENT SHALL URBAN AIRSHIP INC OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
- INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
- BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
- LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
- OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
- ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+/* Copyright Airship and Contributors */
 
 #import "SEGUrbanAirshipAutopilot.h"
 #import "AirshipLib.h"
@@ -35,13 +12,19 @@ NSString *const SEGUrbanAirshipAutopilotAppSecret = @"appSecret";
 
 + (void)load {
     NSNotificationCenter *center = [NSNotificationCenter defaultCenter];
-    [center addObserver:[SEGUrbanAirshipAutopilot class] selector:@selector(didFinishLaunching) name:UIApplicationDidFinishLaunchingNotification object:nil];
+    [center addObserver:[SEGUrbanAirshipAutopilot class]
+               selector:@selector(didFinishLaunching)
+                   name:UIApplicationDidFinishLaunchingNotification
+                 object:nil];
 }
 
 +(void)takeOff:(NSDictionary *)settings storeConfig:(BOOL)storeConfig {
     UAConfig *config = [UAConfig defaultConfig];
     config.productionAppKey = settings[SEGUrbanAirshipAutopilotAppKey];
     config.productionAppSecret = settings[SEGUrbanAirshipAutopilotAppSecret];
+
+    // Enable passive APNS registration
+    config.requestAuthorizationToUseNotifications = NO;
 
     if (!config.inProduction && !config.developmentAppKey && !config.developmentAppSecret) {
         config.developmentAppKey = settings[SEGUrbanAirshipAutopilotAppKey];
@@ -67,6 +50,8 @@ NSString *const SEGUrbanAirshipAutopilotAppSecret = @"appSecret";
     if (![NSThread isMainThread]) {
         dispatch_sync(dispatch_get_main_queue(), ^{
             [UAirship takeOff:config];
+            // Enable push by default for passive registration
+            UAirship.push.userPushNotificationsEnabledByDefault = YES;
         });
     } else {
         [UAirship takeOff:config];
